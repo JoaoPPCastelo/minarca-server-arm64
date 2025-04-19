@@ -115,7 +115,8 @@ COPY --from=builder-rdiff-backup-1.2 /opt/rdiff-backup-1.2.deb /tmp/rdiff-backup
 COPY --from=builder-rdiff-backup-2.0 /opt/rdiff-backup-2.0.deb /tmp/rdiff-backup-2.0.deb
 COPY --from=builder-rdiff-backup-2.2 /opt/rdiff-backup-2.2.deb /tmp/rdiff-backup-2.2.deb
 COPY --from=builder-minarca-server /opt/minarca-server/minarca-server/dist /tmp/minarca-server/
-COPY --from=builder-minarca-server /opt/minarca-server/minarca-server/docker/start.sh /opt/minarca-server/
+#COPY --from=builder-minarca-server /opt/minarca-server/minarca-server/docker/start.sh /opt/minarca-server/
+COPY start.sh /opt/minarca-server/
 
 RUN --security=insecure set -x && \
     apt update  && \
