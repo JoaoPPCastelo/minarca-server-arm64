@@ -81,7 +81,7 @@ RUN git clone https://gitlab.com/ikus-soft/rdiff-backup-build.git && \
 FROM --platform=linux/arm64 python:3.12-bullseye AS builder-minarca-server
 
 ENV TZ=UTC
-ENV MINACRCA_SERVER_VERSION=6.1.0a3
+ENV MINACRCA_SERVER_VERSION=6.1.0b5
 
 RUN apt update && \
     apt -y --no-install-recommends install python3-dev python3-pip python3-setuptools && \
@@ -115,7 +115,6 @@ COPY --from=builder-rdiff-backup-1.2 /opt/rdiff-backup-1.2.deb /tmp/rdiff-backup
 COPY --from=builder-rdiff-backup-2.0 /opt/rdiff-backup-2.0.deb /tmp/rdiff-backup-2.0.deb
 COPY --from=builder-rdiff-backup-2.2 /opt/rdiff-backup-2.2.deb /tmp/rdiff-backup-2.2.deb
 COPY --from=builder-minarca-server /opt/minarca-server/minarca-server/dist /tmp/minarca-server/
-#COPY --from=builder-minarca-server /opt/minarca-server/minarca-server/docker/start.sh /opt/minarca-server/
 COPY start.sh /opt/minarca-server/
 
 RUN --security=insecure set -x && \
