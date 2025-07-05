@@ -14,10 +14,17 @@
       }
     ],
     [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md"
+        ]
+      }
+    ],
+    [
       "@semantic-release/github",
       {
         "assets": [
-          { "path": "minarca/dist/minarca-client_*_arm64.deb"},
           { "path": "CHANGELOG.md"}
         ]
       }
