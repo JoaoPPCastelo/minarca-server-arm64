@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/JoaoPPCastelo/minarca-server-arm64/compare/v1.0.0...v1.1.0) (2025-07-07)
+
+
+### Features
+
+* Add Docker Hub login step to publish workflow ([cb70789](https://github.com/JoaoPPCastelo/minarca-server-arm64/commit/cb70789060978bc5c9c20420dd6e6c1252892b42))
+
 # 1.0.0 (2025-07-06)
 
 
