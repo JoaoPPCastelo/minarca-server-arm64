@@ -19,7 +19,7 @@ docker buildx use insecure-builder
 
 3. Build the image
 ```bash
-docker buildx build --allow security.insecure -t minarca-server-arm64 -f minarca-server.Dockerfile --load .
+docker buildx build --allow security.insecure -t minarca-server-arm64 -f Dockerfile --load .
 ```
 
 Note: You only need to do the first step once, unless you remove the builder with
@@ -52,6 +52,13 @@ services:
       # Define the hostname and ip address to be used by Minarca Agent to connect to this container on port 2222 running SSH Server.
       MINARCA_MINARCA_REMOTE_HOST: localhost:2222
 ```
+
+## Credentials
+
+If it's the first time accessing Minarca, you can use the following credentials to login:
+
+User: admin
+Pass: admin123
 
 ## Disclaimer
 This is a arm64 version of the [Minarca project](https://minarca.org/en_CA). All the source code was developed and it's owned by Minarca developers. I just changed some configuration to make it work on arm64.
