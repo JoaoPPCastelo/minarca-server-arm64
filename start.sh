@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 KEY_DIR="/etc/minarca"
 LOG_DIR="/var/log/minarca"
@@ -8,7 +8,7 @@ export MINARCA_MINARCA_REMOTE_HOST_IDENTITY="$KEY_DIR"
 
 
 echo "Verifying unprivileged user namespace support..."
-su nobody -s /bin/sh -c "unshare --user --net"
+su nobody -s /bin/sh -c "unshare --user --net" 2>/dev/null
 if [ $? -ne 0 ]; then
     echo "=================================================================="
     echo "Error: Unprivileged user namespaces are blocked for non-root users."
@@ -67,7 +67,7 @@ echo "Starting OpenSSH service..."
 
 # Start the Minarca service
 echo "Starting Minarca service..."
-su minarca -c /opt/minarca-server/minarca-server "$@" &
+su -c - minarca /opt/minarca-server/minarca-server "$@" &
 
 # Get the PID of the Python service
 PYTHON_PID=$!

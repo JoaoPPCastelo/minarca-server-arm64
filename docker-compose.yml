@@ -18,7 +18,7 @@ services:
       # Define the URL to be used by users to connect to this container port 8080 running the webserver.
       #MINARCA_EXTERNAL_URL: https://minarca.mycompagny.com
       # Define the hostname and ip address to be used by Minarca Agent to connect to this container on port 2222 running SSH Server.
-      MINARCA_MINARCA_REMOTE_HOST: localhost:2222
+      MINARCA_MINARCA_REMOTE_HOST: host.docker.internal:2222
 
 volumes:
   minarca-backups:

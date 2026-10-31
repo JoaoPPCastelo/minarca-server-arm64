@@ -1,9 +1,5 @@
 # syntax=docker/dockerfile:1.14-labs
 
-# Facing some issues compiling rdiff-backup-1.2 again, so let's use the 
-# one we already compiled and know that works.
-FROM joaoppcastelo/minarca-server-arm64:alfa AS rdiff-backup-1.2
-
 #-----------------------------------------------------
 # Builder for rdiff-backup 2.0
 #-----------------------------------------------------
@@ -12,22 +8,25 @@ FROM --platform=linux/arm64 python:3.7-bullseye AS builder-rdiff-backup-2.0
 ENV TZ=UTC
 ENV RDIFF_BACKUP_VERSION=2.0
 
-RUN apt update && \
-    apt -y --no-install-recommends install build-essential debhelper devscripts librsync-dev libacl1-dev libattr1-dev && \
+# bullseye-security currently lists arm64 packages (git, libhtml-parser-perl, …)
+# whose .debs 404 on the mirror. Use only the main archive for these builders.
+RUN sed -i -E '/-security|-updates/d' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential librsync-dev libacl1-dev libattr1-dev git && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install tox
 
 WORKDIR /opt/rdiff-backup
 
+# .deb is produced by debbuild inside pyinstaller (same as 2.2), not dpkg-buildpackage.
 RUN git clone https://gitlab.com/ikus-soft/rdiff-backup-build.git && \
     cd rdiff-backup-build && \
     cd $RDIFF_BACKUP_VERSION && \
+    sed -i 's/architecture="amd64"/architecture="arm64"/g' rdiff-backup.spec && \
     tox -e pyinstaller && \
-    apt-get build-dep -y . && \
-    dpkg-buildpackage -b && \
-    rm ../*dbgsym*.deb && \
-    mv ../*.deb /opt/rdiff-backup-2.0.deb
+    mv dist/*.deb /opt/rdiff-backup-2.0.deb
 
 #-----------------------------------------------------
 # Builder for rdiff-backup 2.2
@@ -37,8 +36,10 @@ FROM --platform=linux/arm64 python:3.7-bullseye AS builder-rdiff-backup-2.2
 ENV TZ=UTC
 ENV RDIFF_BACKUP_VERSION=2.2
 
-RUN apt update && \
-    apt -y --no-install-recommends install build-essential librsync-dev libacl1-dev libattr1-dev librsync-dev && \
+RUN sed -i -E '/-security|-updates/d' /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential librsync-dev libacl1-dev libattr1-dev git && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install tox
@@ -51,30 +52,29 @@ RUN git clone https://gitlab.com/ikus-soft/rdiff-backup-build.git && \
     sed -i 's/architecture="amd64"/architecture="arm64"/g' rdiff-backup.spec && \
     tox -e pyinstaller && \
     mv dist/*.deb /opt/rdiff-backup-2.2.deb
-    
+
 #-----------------------------------------------------
-# Builder for minarca-server
+# Builder for minarca-server (from rdiffweb monorepo)
 #-----------------------------------------------------
-FROM --platform=linux/arm64 python:3.12-bullseye AS builder-minarca-server
+FROM --platform=linux/arm64 python:3.12-bookworm AS builder-minarca-server
 
 ENV TZ=UTC
-ENV MINACRCA_SERVER_VERSION=6.2.5
+ENV MINARCA_SERVER_VERSION=7.2.1
 
-RUN apt update && \
-    apt -y --no-install-recommends install python3-dev python3-pip python3-setuptools && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --no-upgrade \
+      git python3-dev python3-pip python3-setuptools && \
     rm -rf /var/lib/apt/lists/*
-    
+
 RUN pip3 install tox
 
-WORKDIR /opt/minarca-server
+WORKDIR /opt/rdiffweb
 
-RUN --security=insecure git clone https://gitlab.com/ikus-soft/minarca-server.git && \
-    cd minarca-server && \
-    git checkout $MINACRCA_SERVER_VERSION && \
-    sed -i "s/architecture='amd64'/architecture='arm64'/g" packaging/minarca-server.spec && \
-    TOXENV=py3 tox && \
-    TOXENV=pyinstaller tox && \
-    mv dist/minarca-server_*.deb dist/minarca-server.deb 
+# From 7.0.0, minarca-server lives in the rdiffweb monorepo.
+RUN --security=insecure git clone --depth 1 --branch $MINARCA_SERVER_VERSION https://gitlab.com/ikus-soft/rdiffweb.git . && \
+    sed -i "s/architecture='amd64'/architecture='arm64'/g" minarca-server/packaging/minarca-server.spec && \
+    tox -e pyinstaller && \
+    mv dist/minarca-server_*.deb dist/minarca-server.deb
 
 #-----------------------------------------------------
 # Final image
@@ -88,22 +88,20 @@ VOLUME ["/etc/minarca/", "/backups", "/var/log/minarca/"]
 
 ENV MINARCA_SERVER_HOST=0.0.0.0
 
-COPY --from=rdiff-backup-1.2 /tmp/rdiff-backup-1.2.deb /tmp/rdiff-backup-1.2.deb
 COPY --from=builder-rdiff-backup-2.0 /opt/rdiff-backup-2.0.deb /tmp/rdiff-backup-2.0.deb
 COPY --from=builder-rdiff-backup-2.2 /opt/rdiff-backup-2.2.deb /tmp/rdiff-backup-2.2.deb
-COPY --from=builder-minarca-server /opt/minarca-server/minarca-server/dist /tmp/minarca-server/
+COPY --from=builder-minarca-server /opt/rdiffweb/dist/minarca-server.deb /tmp/minarca-server.deb
 COPY start.sh /opt/minarca-server/
 
 RUN --security=insecure set -x && \
-    apt update  && \
-    apt install -y --no-install-recommends ca-certificates curl gpg rdiff-backup openssh-server && \
-    dpkg -i /tmp/rdiff-backup-1.2.deb && \
+    apt update && \
+    apt install -y --no-install-recommends ca-certificates curl gpg openssh-server && \
     dpkg -i /tmp/rdiff-backup-2.0.deb && \
     dpkg -i /tmp/rdiff-backup-2.2.deb && \
-    dpkg -i --force-overwrite /tmp/minarca-server/minarca-server.deb && \
+    dpkg -i --force-overwrite /tmp/minarca-server.deb && \
     awk '$5 >= 2048' /etc/ssh/moduli > /etc/ssh/moduli.new && \
     mv /etc/ssh/moduli.new /etc/ssh/moduli && \
-    rm -rf /var/lib/apt/lists/* /etc/group- /etc/gshadow- /etc/shadow- /etc/ssh/ssh_host_* && \
+    rm -rf /var/lib/apt/lists/* /etc/group- /etc/gshadow- /etc/shadow- /etc/ssh/ssh_host_* /tmp/*.deb && \
     mkdir -p /var/run/sshd && \
     chmod +x /opt/minarca-server/start.sh
 
