@@ -1,3 +1,10 @@
+# [6.3.0](https://github.com/JoaoPPCastelo/minarca-server-arm64/compare/v6.2.5...v6.3.0) (2026-10-31)
+
+
+### Features
+
+* Upgrade Minarca server to 7.2.1 and improve build process ([#3](https://github.com/JoaoPPCastelo/minarca-server-arm64/issues/3)) ([b13c250](https://github.com/JoaoPPCastelo/minarca-server-arm64/commit/b13c2501a6c2f97d71583a3da46b3c883283aa08))
+
 # [1.2.0](https://github.com/JoaoPPCastelo/minarca-server-arm64/compare/v1.1.0...v1.2.0) (2026-05-23)
 
 
