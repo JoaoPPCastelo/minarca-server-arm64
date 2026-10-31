@@ -1,11 +1,13 @@
 # minarca-arm64
-Arm64 version of Minarca
+Arm64 version of Minarca Server 7.2.0
+
+Built from the official [rdiffweb / minarca-server monorepo](https://gitlab.com/ikus-soft/rdiffweb) (minarca-server lives there since 7.0.0).
 
 ## Build Image
 
-To build the image, and based on the know issue described bellow, you'll need to follow the steps below
+To build the image, and based on the known issue described below, you'll need to follow the steps below.
 
-1. Create a new image builder that allow insecure entitlement
+1. Create a new image builder that allows insecure entitlement
 ```bash
 docker buildx create --driver-opt image=moby/buildkit:master  \
     --use --name insecure-builder \
@@ -61,7 +63,7 @@ User: admin
 Pass: admin123
 
 ## Disclaimer
-This is a arm64 version of the [Minarca project](https://minarca.org/en_CA). All the source code was developed and it's owned by Minarca developers. I just changed some configuration to make it work on arm64.
+This is an arm64 version of the [Minarca project](https://minarca.org/en_CA). All the source code was developed and is owned by Minarca developers. I just changed some configuration to make it work on arm64.
 
 ## Known Issues
-1. For some reason could not run the `build-minarca-server` using "normal" `docker build` command. Had to use the workaround described here https://stackoverflow.com/a/72342814 
+1. For some reason could not run the `build-minarca-server` using a normal `docker build` command. Had to use the workaround described here https://stackoverflow.com/a/72342814
